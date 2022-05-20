@@ -2,7 +2,7 @@ from gurobipy import Model, GRB, quicksum
 import random
 
 random.seed(10)
-I = 5 # número máximo de camiones i
+I = 5 # numero de camiones usados
 J = 20 # número máximo de casas j
 T = 7 # número de dias t
 M = 10 # número máximo de recolectores m
@@ -10,7 +10,7 @@ N = 5 # número máximo de conductores n
 P = 2 # número máximo de puntos limpios p
 
 
-#rangos
+#rangos [1-5]
 I_ = range(1, I + 1) # rango de camiones i
 J_ = range(1, J + 1) # rango de casas j
 T_ = range(1, T + 1) # rango de dias t
@@ -20,21 +20,19 @@ P_ = range(1, P + 1) # rango de puntos limpios p
 
 
 #Conjuntos: Hay que definir los párametros (Falta revisar los rangos de los randint)
-A = random.choices(N_, k=int(n*0.2)) # Número máximo de camiones i ->REVISAR: no se como definirlo
-B = {(i): random.randint(15000, 40000) for i in I_} #capacidad máxima del camión i
-H = {(p): random.randint(5000, 10000) for p in P_ }
-C = random.choices(N_, k=int(n*0.2)) # Precio de un basurero de reciclaje ->REVISAR: no se como definirlo
-Sn = {(n,t): random.randint(9,12) for n in N_ for t in T_} #Sueldo de cada conductor n
-Sm = {(m,t): random.randint(9,12) for m in M_ for t in T_} #Sueldo de cada recolector m
-f = random.choices(N_, k=int(n*0.2)) # Costo promedio de viajar entre casas ->REVISAR: no se como definirlo
-fj = {(j,p): random.randint(9,12) for j in J_ for p in P_} # Cpsto de viajar entre la casa j y el punto limpio p
-E = random.choices(N_, k=int(n*0.2)) # kg de residuos reciclables por basurero (1 basurero por casa) ->REVISAR: no se como definirlo
-G = random.choices(N_, k=int(n*0.2)) # Casas en la comuna ->REVISAR: no se como definirlo
-Lm = {(m,t): random.randint(9,12) for m in M_ for t in T_} #Implementos usados por el recolector m en el dia t
-Ln = {(n,t): random.randint(9,12) for n in N_ for t in T_} #Implementos usados por el conductor n en el dia t
-O = random.choices(N_, k=int(n*0.2)) # Costos de implementos de tabajadores ->REVISAR: no se como definirlo
-
-
+A =  20 # Número máximo de camiones i
+B = {(i): random.randint(10000, 20000) for i in I_} #capacidad máxima del camión i en kg
+H = {(p): random.randint(1000000, 1300000) for p in P_ }
+C = 20000 # Precio de un basurero de reciclaje por unidad en pesos
+Sn = {(n,t): random.randint(27000,29000) for n in N_ for t in T_} #Sueldo de cada conductor en en pesos
+Sm = {(m,t): random.randint(20000,25000) for m in M_ for t in T_} #Sueldo de cada recolector m en pesos
+f = 1000 # Costo promedio de viajar entre casas  en pesos
+fj = {(j,p): random.randint(1000,2000) for j in J_ for p in P_} # Costo de viajar entre la casa j y el punto limpio p
+E = random.randint(0,50) # kg de residuos reciclables por basurero (1 basurero por casa) 
+G = 171511 # Casas en la comuna (puente alto)
+Lm = {(m,t): random.randint(4,7) for m in M_ for t in T_} #Implementos usados por el recolector m en el dia t
+Ln = {(n,t): random.randint(4,7) for n in N_ for t in T_} #Implementos usados por el conductor n en el dia t
+O = random.randint(700, 1500) # Costos de implementos de tabajadores ->REVISAR: no se como definirlo
 
 
 
