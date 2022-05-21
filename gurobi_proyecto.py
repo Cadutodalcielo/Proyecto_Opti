@@ -48,8 +48,8 @@ y = m.addVars(I_,J_,T_, vtype = GRB.BINARY)
 w = m.addVars(M_,T_, vtype = GRB.BINARY)
 z = m.addVars(N_,T_, vtype = GRB.BINARY)
 v = m.addVars(I_,J_,T_, vtype = GRB.BINARY)
-u = m.addVars(I_,J_,T_, vtype = GRB.BINARY)
-t = m.addVars(I_,J_,T_, vtype = GRB.BINARY)
+u = m.addVars(I_,J_,T_,P_, vtype = GRB.BINARY)
+t = m.addVars(I_,J_,T_,P_, vtype = GRB.BINARY)
 r = m.addVars(J_, vtype = GRB.BINARY)
 q = m.addVars(I_,T_,P_)
 
@@ -59,9 +59,11 @@ q = m.addVars(I_,T_,P_)
 m.update()
 
 #Función Objetivo
-objetivo = sum(sum(sum(v[i,j,t]for e in range(1,exp[i]+1))for k in K_)for i in N_) + \
-            sum(sum(sum(G[p] * r[p,e] for e in range(1,exp[p]+1))for p in P)for k in K_) - \
-            sum(sum(sum(sum(C[i,k] * y[i,j,h,k] + S * x[i,j,h,k] for h in D_)for j in J_)for k in K_)for i in N_)
+objetivo = sum(\
+                sum(sum(sum(u[i,j,t,p]*fj[j,p] + t[i,j,t,p]*fj[j,p] for p in P_) +  v[i,j,t]*f for j in J_) for i in I_) + \
+                    sum(w[m,t]*(Sm[m,t] + O*Lm[m,t]) for m in M_) + \
+                        sum(z[n,t]*(Sn[n,t] + O*Ln[n,t]) for n in N_) \
+                            for t in T_)           
 m.setObjective(objetivo, GRB.MINIMIZE)
 
 #R1: No se puede exceder el máximo de camiones disponibles.
@@ -104,11 +106,11 @@ m.addConstrs(y[i,j,t] <= x[i,t] for i in I_ for j in J_ for t in T_)
 #R12: Para poder pasar por una casa después de la casa j, el camión debe pasar primero por j.
 m.addConstrs(v[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
 
-#R13: Para que j pueda ser la primera casa de ese dia t, el camion debe pasar por j ese dia.
-m.addConstrs(u[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
+#R13: Para que j pueda ser la primera casa de ese dia t y despues de pasar por el punto p, el camion debe pasar por j ese dia.
+m.addConstrs(u[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
 
-#R14: Para que j pueda ser la ultima casa de ese dia t, el camion debe pasar por j ese dia.
-m.addConstrs(t[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
+#R14: Para que j pueda ser la ultima casa de ese dia ty antes de pasar por el punto limpio p el camion debe pasar por j ese dia.
+m.addConstrs(t[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)	
 
 
 
