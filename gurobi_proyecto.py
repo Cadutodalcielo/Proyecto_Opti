@@ -71,7 +71,7 @@ m.addConstrs(sum(x[i,t] for i in I_) <= A for t in T_)
 
 
 #R2: No superar la carga máxima del camión, si pasa por un punto limpio se puede volver a llenar.
-m.addConstrs(sum(y[i,j,t] for j in J_) <= B[i]*(1 + sum(q[i,t,p] for p in P_)) for t in T_ for i in I_)
+m.addConstrs(sum(y[i,j,t] * E for j in J_) <= B[i]*(1 + sum(q[i,t,p] for p in P_)) for t in T_ for i in I_)
 
 #R3: Los camiones deben recolectar todas las casas en la semana.
 m.addConstrs(sum(sum(sum(y[i,j,t] for j in J)for i in I_)for t in T_) == G )
@@ -110,7 +110,13 @@ m.addConstrs(v[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
 m.addConstrs(u[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
 
 #R14: Para que j pueda ser la ultima casa de ese dia ty antes de pasar por el punto limpio p el camion debe pasar por j ese dia.
-m.addConstrs(t[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)	
+m.addConstrs(t[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
+
+#R15: Después de salir de cada punto limpio p, el camión i debe recolectar la primera casa j del recorrido: 
+m.addConstrs(sum(u[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
+
+#R16: Antes de llegar a un punto limpio p, el camión i debe recolectar la última casa j del recorrido:
+m.addConstrs(sum(t[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
 
 
 
