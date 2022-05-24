@@ -2,12 +2,12 @@ from gurobipy import Model, GRB, quicksum
 import random
 
 random.seed(10)
-I = 5 # numero de camiones usados
-J = 20 # número máximo de casas j
+I = 50 # numero de camiones usados
+J = 5 # número máximo de casas j
 T = 7 # número de dias t
-M = 10 # número máximo de recolectores m
-N = 5 # número máximo de conductores n
-P = 2 # número máximo de puntos limpios p
+M = 100 # número máximo de recolectores m
+N = 100 # número máximo de conductores n
+P = 50 # número máximo de puntos limpios p
 
 
 #rangos [1-5]
@@ -29,10 +29,16 @@ Sm = {(m,t): random.randint(20000,25000) for m in M_ for t in T_} #Sueldo de cad
 f = 1000 # Costo promedio de viajar entre casas  en pesos
 fj = {(j,p): random.randint(1000,2000) for j in J_ for p in P_} # Costo de viajar entre la casa j y el punto limpio p
 E = random.randint(0,50) # kg de residuos reciclables por basurero (1 basurero por casa) 
-G = 171511 # Casas en la comuna (puente alto)
+G = 5 #171511 # Casas en la comuna (puente alto)
 Lm = {(m,t): random.randint(4,7) for m in M_ for t in T_} #Implementos usados por el recolector m en el dia t
 Ln = {(n,t): random.randint(4,7) for n in N_ for t in T_} #Implementos usados por el conductor n en el dia t
 O = random.randint(700, 1500) # Costos de implementos de tabajadores ->REVISAR: no se como definirlo
+
+# I_sin_i = []         #Camiones sin i, se usa en la restriccion 4
+# for h in I_:
+#     if h not in P:
+#         N_sin_P.append(i)
+
 
 
 
@@ -49,7 +55,7 @@ w = m.addVars(M_,T_, vtype = GRB.BINARY)
 z = m.addVars(N_,T_, vtype = GRB.BINARY)
 v = m.addVars(I_,J_,T_, vtype = GRB.BINARY)
 u = m.addVars(I_,J_,T_,P_, vtype = GRB.BINARY)
-t = m.addVars(I_,J_,T_,P_, vtype = GRB.BINARY)
+t_1 = m.addVars(I_,J_,T_,P_, vtype = GRB.BINARY)
 r = m.addVars(J_, vtype = GRB.BINARY)
 q = m.addVars(I_,T_,P_)
 
@@ -59,8 +65,9 @@ q = m.addVars(I_,T_,P_)
 m.update()
 
 #Función Objetivo
+
 objetivo = sum(\
-                sum(sum(sum(u[i,j,t,p]*fj[j,p] + t[i,j,t,p]*fj[j,p] for p in P_) +  v[i,j,t]*f for j in J_) for i in I_) + \
+                sum(sum(sum(u[i,j,t,p]*fj[j,p] + t_1[i,j,t,p]*fj[j,p] for p in P_) +  v[i,j,t]*f for j in J_) for i in I_) + \
                     sum(w[m,t]*(Sm[m,t] + O*Lm[m,t]) for m in M_) + \
                         sum(z[n,t]*(Sn[n,t] + O*Ln[n,t]) for n in N_) \
                             for t in T_)           
@@ -73,12 +80,11 @@ m.addConstrs(sum(x[i,t] for i in I_) <= A for t in T_)
 #R2: No superar la carga máxima del camión, si pasa por un punto limpio se puede volver a llenar.
 m.addConstrs(sum(y[i,j,t] * E for j in J_) <= B[i]*(1 + sum(q[i,t,p] for p in P_)) for t in T_ for i in I_)
 
-#R3: Los camiones deben recolectar todas las casas en la semana.
-m.addConstrs(sum(sum(sum(y[i,j,t] for j in J)for i in I_)for t in T_) == G )
+#R3: Los camiones deben recolectar todas las casas en la semana. lo hace insatisfacible 
+m.addConstr(sum(sum(sum(y[i,j,t] for j in J_)for i in I_)for t in T_) == G)       
 
-#R4:Para que no se repitan, no puede pasar mas de un camión por la misma casa mas de una vez por semana.
-# REVISAR: Como aplicar el subconjunto alpha(que se usa para que el valor de i no se repita).
-m.addConstrs()
+# #R4:Para que no se repitan, no puede pasar mas de un camión por la misma casa mas de una vez por semana.
+# m.addConstrs(sum(y[i,j,t] for t in T_) == 1 - sum(y[a,j,t] for t in T_) for j in J_ for i in I_ for a in I_ if i != a)
 
 #R5: Para cada camión deben haber al menos 1 conductor y 2 recolectores.
 m.addConstrs(sum(z[n,t] for n in N_) + 2 * sum(w[m,t] for m in M_) >= 3 * sum(x[i,t] for i in I_) for t in T_)
@@ -87,10 +93,10 @@ m.addConstrs(sum(z[n,t] for n in N_) + 2 * sum(w[m,t] for m in M_) >= 3 * sum(x[
 m.addConstrs(x[i,7] == 0 for i in I_)
 
 #R7: La cantidad de residuos recolectado debe ser menor a la capacidad del punto limpio.
-m.addConstrs(sum(sum(sum(y[i,j,t] * E for j in J_)for i in I_)for t in T_) <= sum(H[p] for p in P_)) 
+m.addConstr(sum(sum(sum(y[i,j,t] * E for j in J_)for i in I_)for t in T_) <= sum(H[p] for p in P_)) 
 
-#R8: Se debe comprar un basurero de reciclaje por casa para poder llevar a cabo la recolección
-m.addConstrs(sum(r[j] for j in J_) == G)
+#R8: Se deben comprar un basurero de reciclaje por casa para poder llevar a cabo la recolección
+m.addConstr(sum(r[j] for j in J_) == G)
 
 
 #R9: Los implementos usados por los conductores el dia t deben ser suficientes para cada trabajador.
@@ -110,13 +116,13 @@ m.addConstrs(v[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
 m.addConstrs(u[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
 
 #R14: Para que j pueda ser la ultima casa de ese dia ty antes de pasar por el punto limpio p el camion debe pasar por j ese dia.
-m.addConstrs(t[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
+m.addConstrs(t_1[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
 
-#R15: Después de salir de cada punto limpio p, el camión i debe recolectar la primera casa j del recorrido: 
-m.addConstrs(sum(u[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
+# # #R15: Después de salir de cada punto limpio p, el camión i debe recolectar la primera casa j del recorrido: 
+# m.addConstrs(sum(u[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
 
-#R16: Antes de llegar a un punto limpio p, el camión i debe recolectar la última casa j del recorrido:
-m.addConstrs(sum(t[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
+# #R16: Antes de llegar a un punto limpio p, el camión i debe recolectar la última casa j del recorrido:
+# m.addConstrs(sum(t_1[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
 
 
 
