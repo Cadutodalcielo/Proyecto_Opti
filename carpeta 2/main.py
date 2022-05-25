@@ -78,45 +78,45 @@ m.addConstr(sum(sum(sum(y[i,j,t] for j in J_)for i in I_)for t in T_) == G)
 # #R4:Para que no se repitan, no puede pasar mas de un camión por la misma casa mas de una vez por semana.
 # m.addConstrs(sum(y[i,j,t] for t in T_) == 1 - sum(y[a,j,t] for t in T_) for j in J_ for i in I_ for a in I_ if i != a)
 
-#R5: Para cada camión deben haber al menos 1 conductor y 2 recolectores.
+#R5: Para cada camión deben haber al menos 1 conductors.
 m.addConstrs(sum(z[n,t] for n in N_) >=  sum(x[i,t] for i in I_) for t in T_ )
 
-#R6: Para cada camión deben haber al menos 1 conductor y 2 recolectores.
+#R6: Para cada camión deben haber al menos 2 recolectores.
 m.addConstrs(sum(w[m,t] for m in M_) >=  2*sum(x[i,t] for i in I_) for t in T_ )
 
-#R6: Para cumplir con las jornadas laborales de conductores y recolectores, no se recolectan casas los Domingos.
+#R7: Para cumplir con las jornadas laborales de conductores y recolectores, no se recolectan casas los Domingos.
 m.addConstrs(x[i,7] == 0 for i in I_)
 
-#R7: La cantidad de residuos recolectado debe ser menor a la capacidad del punto limpio.
+#R8: La cantidad de residuos recolectado debe ser menor a la capacidad del punto limpio.
 m.addConstr(sum(sum(sum(y[i,j,t] * E for j in J_)for i in I_)for t in T_) <= sum(H[p] for p in P_)) 
 
-#R8: Se deben comprar un basurero de reciclaje por casa para poder llevar a cabo la recolección
+#R9: Se deben comprar un basurero de reciclaje por casa para poder llevar a cabo la recolección
 m.addConstr(sum(r[j] for j in J_) == G)
 
 
-#R9: Los implementos usados por los conductores el dia t deben ser suficientes para cada trabajador.
+#R10: Los implementos usados por los conductores el dia t deben ser suficientes para cada trabajador.
 m.addConstrs(sum(z[n,t] for n in N_) <= sum(Ln[n,t] for n in N_) for t in T_) 
 
-#R10: Los implementos usados por los recolectores el dia t deben ser suficientes para cada trabajador.
+#R11: Los implementos usados por los recolectores el dia t deben ser suficientes para cada trabajador.
 m.addConstrs(sum(w[m,t] for m in M_) <= sum(Lm[m,t] for m in M_) for t in T_) 
 
 
-#R11: Para poder pasar por las casas el camión i debe estar funcionando.
+#R12: Para poder pasar por las casas el camión i debe estar funcionando.
 m.addConstrs(y[i,j,t] <= x[i,t] for i in I_ for j in J_ for t in T_)
 
-#R12: Para poder pasar por una casa después de la casa j, el camión debe pasar primero por j.
+#R13: Para poder pasar por una casa después de la casa j, el camión debe pasar primero por j.
 m.addConstrs(v[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
 
-#R13: Para que j pueda ser la primera casa de ese dia t y despues de pasar por el punto p, el camion debe pasar por j ese dia.
+#R14: Para que j pueda ser la primera casa de ese dia t y despues de pasar por el punto p, el camion debe pasar por j ese dia.
 m.addConstrs(u[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
 
-#R14: Para que j pueda ser la ultima casa de ese dia ty antes de pasar por el punto limpio p el camion debe pasar por j ese dia.
+#R15: Para que j pueda ser la ultima casa de ese dia ty antes de pasar por el punto limpio p el camion debe pasar por j ese dia.
 m.addConstrs(t_1[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
 
-# # #R15: Después de salir de cada punto limpio p, el camión i debe recolectar la primera casa j del recorrido: 
+# # #R16: Después de salir de cada punto limpio p, el camión i debe recolectar la primera casa j del recorrido: 
 # m.addConstrs(sum(u[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
 
-# #R16: Antes de llegar a un punto limpio p, el camión i debe recolectar la última casa j del recorrido:
+# #R17: Antes de llegar a un punto limpio p, el camión i debe recolectar la última casa j del recorrido:
 # m.addConstrs(sum(t_1[i,j,t,p] for j in J_) == 1 for i in I_ for t in T_ for p in P_)
 
 
