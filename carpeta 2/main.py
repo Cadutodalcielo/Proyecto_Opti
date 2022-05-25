@@ -79,7 +79,10 @@ m.addConstr(sum(sum(sum(y[i,j,t] for j in J_)for i in I_)for t in T_) == G)
 # m.addConstrs(sum(y[i,j,t] for t in T_) == 1 - sum(y[a,j,t] for t in T_) for j in J_ for i in I_ for a in I_ if i != a)
 
 #R5: Para cada camión deben haber al menos 1 conductor y 2 recolectores.
-m.addConstrs(sum(z[n,t] for n in N_) + 2 * sum(w[m,t] for m in M_) >= 3 * sum(x[i,t] for i in I_) for t in T_)
+m.addConstrs(sum(z[n,t] for n in N_) >=  sum(x[i,t] for i in I_) for t in T_ )
+
+#R6: Para cada camión deben haber al menos 1 conductor y 2 recolectores.
+m.addConstrs(sum(w[m,t] for m in M_) >=  2*sum(x[i,t] for i in I_) for t in T_ )
 
 #R6: Para cumplir con las jornadas laborales de conductores y recolectores, no se recolectan casas los Domingos.
 m.addConstrs(x[i,7] == 0 for i in I_)
