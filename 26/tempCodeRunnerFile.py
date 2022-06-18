@@ -1,0 +1,1 @@
+m.addConstrs(y[i,j,7] == 0 for i in I_ for j in J_)

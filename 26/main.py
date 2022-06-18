@@ -4,8 +4,8 @@ import random
 random.seed(10)
 
 I = 40 # numero de camiones usados
-G = 1715# Casas en la comuna
-T = 7 # número de dias t
+G = 175*2# 0.1% de las casas en la comuna
+T = 6 # número de dias t
 M = 80 # número máximo de recolectores m
 N = 40 # número máximo de conductores n
 P = 5 # número máximo de puntos limpios p
@@ -39,6 +39,7 @@ O = random.randint(30, 9000) # Costos de implementos de tabajadores
 
 #### ESCRIBA SU MODELO AQUI ####
 m = Model()
+m.Params.TimeLimit = 30*60
 
 #Variables
 x = m.addVars(I_,T_, vtype = GRB.BINARY)
@@ -85,7 +86,7 @@ m.addConstrs(sum(z[n,t] for n in N_) >=  sum(x[i,t] for i in I_) for t in T_ )
 m.addConstrs(sum(w[m,t] for m in M_) >=  2*sum(x[i,t] for i in I_) for t in T_ )
 
 #R7: Para cumplir con las jornadas laborales de conductores y recolectores, no se recolectan casas los Domingos.
-m.addConstrs(x[i,7] == 0 for i in I_)
+# m.addConstrs(y[i,j,7] == 0 for i in I_ for j in J_)
 
 #R8: La cantidad de residuos recolectado debe ser menor a la capacidad del punto limpio.
 m.addConstr(sum(sum(sum(y[i,j,t] * E for j in J_)for i in I_)for t in T_) <= sum(H[p] for p in P_)) 
@@ -105,7 +106,7 @@ m.addConstrs(sum(w[m,t] for m in M_) <= sum(Lm[m,t] for m in M_) for t in T_)
 m.addConstrs(y[i,j,t] <= x[i,t] for i in I_ for j in J_ for t in T_)
 
 #R13: Para poder pasar por una casa después de la casa j, el camión debe pasar primero por j.
-m.addConstrs(v[i,j,t] <= y[i,j,t] for i in I_ for j in J_ for t in T_)
+m.addConstrs(v[i,j,t] >= y[i,j,t] for i in I_ for j in J_ for t in T_)
 
 #R14: Para que j pueda ser la primera casa de ese dia t y despues de pasar por el punto p, el camion debe pasar por j ese dia.
 m.addConstrs(u[i,j,t,p] <= y[i,j,t] for i in I_ for j in J_ for t in T_ for p in P_)
